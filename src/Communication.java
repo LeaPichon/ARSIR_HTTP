@@ -101,12 +101,17 @@ public class Communication implements Runnable {
                                 String fileName = queryString.substring("GET ".length() + 1, queryString.indexOf("HTTP/1.1") - 1);
                                 String code;
                                 File f = new File(Server.workspace + "/" + fileName);
-                                if(f.exists() && !f.isDirectory()) code = "HTTP/1.1 204 No Content";
-                                else code = "HTTP/1.1 201 Created";
+                                if(f.exists() && !f.isDirectory()) {
+                                    code = "HTTP/1.1 204 No Content";
+                                }
+                                else {
+                                    code = "HTTP/1.1 201 Created";
+                                }
 
                                 try {
                                     FileOutputStream fileOut = new FileOutputStream(Server.workspace + "/" + fileName);
-
+                                    System.out.println(Server.workspace);
+                                    System.out.print(fileName);
                                     // check length
                                     String lenghtString = "";
                                     for (int i = queryString.toLowerCase().indexOf("content-length: ") + "Content-Length: ".length(); Character.isDigit(queryString.charAt(i)); i++)
@@ -114,8 +119,8 @@ public class Communication implements Runnable {
                                     int contentLength = Integer.valueOf(lenghtString);
 
                                     // copy data into file
-                                    byte[] content = new byte[1];
-                                    content = in.readAllBytes();
+                                    byte[] content = new byte[contentLength];
+                                    in.readNBytes(content, 0, contentLength);
                                     fileOut.write(content);
 
                                     fileOut.close();

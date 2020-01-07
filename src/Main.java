@@ -77,8 +77,9 @@ public class Main extends Application {
             @Override
             public void handle(ActionEvent actionEvent) {
 
+                System.out.println(fileNameSend.getText());
                 try {
-                    int result = client.putFile(filePathSend.getText(), "test.jpg");
+                    int result = client.putFile(filePathSend.getText(), fileNameSend.getText());
 
                     /*final Stage dialog = new Stage();
                     dialog.initModality(Modality.APPLICATION_MODAL);

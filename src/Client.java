@@ -128,6 +128,74 @@ public class Client {
 
     public int putFile(String filePath, String filePathInServeur) {
 
+        // read file
+        try {
+            FileInputStream fileIn = new FileInputStream(filePath);
+            byte[] result = fileIn.readAllBytes();
+            fileIn.close();
+
+            // send the file to the server
+            if(!socket.isConnected())
+                if(!connect(this.url, this.port)) {
+                    return 1; // connection with server error
+                }
+
+
+            try {
+                // query HEAD
+                out.println("PUT " + filePathInServeur + " HTTP/1.1");
+                out.println("Host: " + url);
+                out.println("Content-Type: " + Files.probeContentType(Paths.get(filePath)));
+                out.println("Content-Length: " + result.length);
+                out.println();
+
+                // content
+                this.socket.getOutputStream().write(result);
+                this.socket.getOutputStream().flush();
+
+                // get answer
+                byte[] temp = new byte[result.length];
+                byte[] resultByte = new byte[1];
+                boolean stop = false;
+                boolean tempStop = false;
+                while (!stop) {
+                    input.readNBytes(temp, 0, 1);
+
+                    if (temp[0] == 10 && tempStop){
+                        stop = true;
+                    }
+                    else {
+                        if (temp[0] == 10) {
+                            tempStop = true;
+                        }
+                        else if (temp[0] != 13) {
+                            tempStop = false;
+                        }
+                        byte[] tempQuery = new byte[resultByte.length + 1];
+                        System.arraycopy(resultByte, 0, tempQuery, 0, resultByte.length);
+                        tempQuery[resultByte.length] = temp[0];
+                        resultByte = tempQuery;
+                    }
+                }
+
+                // check code value
+                int code = Integer.valueOf(new String(resultByte).substring("HTTP/1.1 ".length() + 1, "HTTP/1.1 ".length() + 4));
+                if (code == 201 || code == 204 || code == 200)
+                    return 0;
+
+                return code;
+
+            } catch (IOException e) {
+                return 1;   // connexion with the server
+            }
+
+        } catch (IOException e) {
+            return 5;   // pb with file
+        }
+    }
+
+    /*public int putFile(String filePath, String filePathInServeur) {
+
         try {
             OutputStream out2 = socket.getOutputStream();
             String putFileName = filePath;
@@ -142,7 +210,7 @@ public class Client {
         }
 
         return 0;
-    }
+    }*/
     private static byte[] readFile(String fileName) {
         String filePath = fileName;
         try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
